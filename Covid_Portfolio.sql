@@ -4,18 +4,16 @@ where continent is not null
 order by 3,4 Desc
 
 
---select *
---from Covid_Portfolio..CovidVaccination
---order by 3,4
+select *
+from Covid_Portfolio..CovidVaccination
+order by 3,4
 
 
 --select the data I will be Using
 
-
 select Location, date, total_cases, new_cases, total_deaths, population
 from Covid_Portfolio..CovidDeaths
 order by 1,2
-
 
 ---I will be looking at Total Cases vs Total Deaths
 ---Shows the likelihood of dying if you contract covid
@@ -26,7 +24,6 @@ where location like '%Nigeria%'
 and continent is not null
 order by 1,2
 
-
 ---I will look at the Total Cases Vs the Population
 ---shows the total percentage of the population that got covid
 
@@ -35,18 +32,25 @@ from Covid_Portfolio..CovidDeaths
 --where location like '%Nigeria%'
 order by 1,2
 
+----Looking at the total new death count per continent
+
+select location, SUM(cast(new_deaths as int)) as TotalDeathCount
+from Covid_Portfolio..CovidDeaths
+--where location like '%Nigeria%'
+where continent is null
+and location not in ('World', 'European Union', 'International')
+Group by location
+order by TotalDeathCount Desc
 
 ---Looking at countries with the highest infection rate compared to its population
 
-select Location, Max(total_cases) as HighestInfectionCount, population, Max((total_cases/population)) *100 as PercentagePopulationInfected
+select Location, population, date, Max(total_cases) as HighestInfectionCount, Max((total_cases/population)) *100 as PercentagePopulationInfected
 from Covid_Portfolio..CovidDeaths
 --where location like '%Nigeria%'
-Group by location, population
+Group by location, population, date
 order by PercentagePopulationInfected Desc
 
-
 ---Showing countries with the Highest Death Count per Population
-
 
 select Location, MAX(cast(total_deaths as int)) as TotalDeathCount
 from Covid_Portfolio..CovidDeaths
@@ -55,9 +59,7 @@ where continent is not null
 Group by location
 order by TotalDeathCount Desc
 
-
 ----BREAKING THINGS DOWN BY CONTINENT
-
 ---Showing continents with the highest death count per population
 
 select continent, MAX(cast(total_deaths as int)) as TotalDeathCount
@@ -66,7 +68,6 @@ from Covid_Portfolio..CovidDeaths
 where continent is not null
 Group by continent
 order by TotalDeathCount Desc
-
 
 ----Global Numbers by date
 
@@ -86,8 +87,6 @@ where continent is not null
 ---Group by date
 order by 1,2
 
-
-
 ---Looking at Total population vs Vaccinations
 select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
 , SUM(cast(vac.new_vaccinations as int)) OVER (partition by dea.location order by dea.location, dea.Date) as CummulativeTotalVaccination
@@ -98,7 +97,6 @@ join Covid_Portfolio..CovidVaccinations vac
 	and dea.date = vac.date
 where dea.continent is not null
 order by 1,2,3
-
 
 
 --- Use CTE
@@ -118,7 +116,6 @@ where dea.continent is not null
 )
 select *, (CummulativeTotalVaccination/Population)*100 as PercentageCummulativeVaccinated
 from PopvsVac
-
 
 
 ----TEMP Table
@@ -147,10 +144,7 @@ join Covid_Portfolio..CovidVaccinations vac
 select *, (CummulativeTotalVaccination/Population)*100 as PercentageCummulativeVaccinated
 from #PercentageCummulativeVaccinated
 
-
-
 ----Creating view to store Data for visualization 
-
 
 create view PercentageCummulativeVaccinated as
 select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
